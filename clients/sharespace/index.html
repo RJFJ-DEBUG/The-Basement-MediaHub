@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ShareSpace - The Basement MediaHub</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <header><h1>📺 ShareSpace</h1></header>
+  <div id="filters">
+    <button onclick="loadSources()">All</button>
+    <button onclick="loadSources('video')">Videos</button>
+    <button onclick="loadSources('audio')">Audio</button>
+    <button onclick="loadSources('image')">Images</button>
+  </div>
+  <div id="grid"></div>
+  <section id="add-source">
+    <h2>➕ Add Your Source</h2>
+    <input id="s-id" placeholder="Unique ID (e.g. my-stream-01)"/>
+    <input id="s-title" placeholder="Title"/>
+    <select id="s-type"><option value="video">Video</option><option value="audio">Audio</option><option value="image">Image</option></select>
+    <input id="s-url" placeholder="Media URL"/>
+    <input id="s-thumb" placeholder="Thumbnail URL (optional)"/>
+    <input id="s-desc" placeholder="Description (optional)"/>
+    <input id="s-tags" placeholder="Tags (comma separated)"/>
+    <button onclick="addSource()">Add Source</button>
+    <p id="add-status"></p>
+  </section>
+  <script src="app.js"></script>
+</body>
+</html>
