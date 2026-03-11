@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<settings>
+  <setting id="api_url" type="string" label="MediaHub API URL" default="http://localhost:3000/api"/>
+</settings>
