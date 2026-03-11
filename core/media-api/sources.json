@@ -1,0 +1,22 @@
+{
+  "sources": [
+    {
+      "id": "sample-01",
+      "title": "Big Buck Bunny",
+      "type": "video",
+      "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+      "thumbnail": "https://via.placeholder.com/300x200?text=Big+Buck+Bunny",
+      "description": "Open source animated short film.",
+      "tags": ["animation", "free"]
+    },
+    {
+      "id": "sample-audio-01",
+      "title": "Sample Music Track",
+      "type": "audio",
+      "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+      "thumbnail": "",
+      "description": "A royalty-free demo audio track.",
+      "tags": ["music", "free"]
+    }
+  ]
+}
