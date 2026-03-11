@@ -1,138 +1,45 @@
-# -*- coding: utf-8 -*-
-"""
-The Basement MediaHub - Kodi Add-on
-Entrypoint: default.py
-"""
-
-import sys
-import urllib.parse
-import xbmc
-import xbmcgui
-import xbmcplugin
-import xbmcaddon
-
-try:
-    import requests
-except ImportError:
-    xbmcgui.Dialog().ok('Missing Dependency', 'requests library not found. Install it via pip.')
-    sys.exit(1)
+import xbmcgui, xbmcplugin, xbmcaddon
+import urllib.request, urllib.parse, json, sys
 
 ADDON = xbmcaddon.Addon()
-ADDON_NAME = ADDON.getAddonInfo('name')
-PLUGIN_URL = sys.argv[0]
+API_BASE = ADDON.getSetting("api_url") or "http://localhost:5000"
 HANDLE = int(sys.argv[1])
-ARGS = urllib.parse.parse_qs(urllib.parse.urlparse(sys.argv[2]).query)
-API_BASE = ADDON.getSetting('api_url') or 'http://localhost:3000/api'
 
+def get_sources(media_type=None):
+    url = f"{API_BASE}/api/sources"
+    if media_type:
+        url += f"?type={media_type}"
+    with urllib.request.urlopen(url) as resp:
+        return json.loads(resp.read())["sources"]
 
-def build_url(query):
-    return PLUGIN_URL + '?' + urllib.parse.urlencode(query)
-
-
-def main_menu():
-    """Show top-level categories."""
-    categories = [
-        ('movies', 'Movies', 'DefaultMovies.png'),
-        ('tvshows', 'TV Shows', 'DefaultTVShows.png'),
-        ('search', 'Search', 'DefaultAddonsSearch.png'),
-    ]
-    for cat_id, label, icon in categories:
-        li = xbmcgui.ListItem(label=label)
-        li.setArt({'icon': icon, 'thumb': icon})
-        li.setInfo('video', {'title': label, 'mediatype': 'video'})
-        url = build_url({'category': cat_id})
-        xbmcplugin.addDirectoryItem(handle=HANDLE, url=url, listitem=li, isFolder=True)
-    xbmcplugin.addSortMethods(HANDLE, xbmcplugin.SORT_METHOD_LABEL)
+def list_menu():
+    categories = [("Videos", "video"), ("Audio", "audio"), ("Images", "image")]
+    for label, mtype in categories:
+        li = xbmcgui.ListItem(label)
+        params = urllib.parse.urlencode({"action": "list", "type": mtype})
+        xbmcplugin.addDirectoryItem(HANDLE, f"{sys.argv[0]}?{params}", li, isFolder=True)
     xbmcplugin.endOfDirectory(HANDLE)
 
-
-def list_media(category):
-    """Fetch and list media items for the given category."""
-    try:
-        response = requests.get(f"{API_BASE}/media?type={category}", timeout=10)
-        response.raise_for_status()
-        media_items = response.json()
-    except Exception as e:
-        xbmc.log(f"[BasementMediaHub] API error: {e}", xbmc.LOGERROR)
-        xbmcgui.Dialog().notification(
-            ADDON_NAME,
-            'Could not connect to MediaHub API. Check Settings.',
-            xbmcgui.NOTIFICATION_ERROR
-        )
-        xbmcplugin.endOfDirectory(HANDLE)
-        return
-
-    for item in media_items:
-        title = item.get('title', 'Unknown')
-        item_id = item.get('id', '')
-        thumb = item.get('thumbnail', '')
-        plot = item.get('description', '')
-        year = item.get('year', '')
-        genre = item.get('genre', '')
-        stream_url = f"{API_BASE}/media/stream/{item_id}"
-
-        li = xbmcgui.ListItem(label=title)
-        li.setArt({'thumb': thumb, 'poster': thumb, 'fanart': thumb})
-        li.setInfo('video', {
-            'title': title,
-            'plot': plot,
-            'year': year,
-            'genre': genre,
-            'mediatype': 'movie' if category == 'movies' else 'episode'
-        })
-        li.setProperty('IsPlayable', 'true')
-        li.setPath(stream_url)
-        xbmcplugin.addDirectoryItem(handle=HANDLE, url=stream_url, listitem=li, isFolder=False)
-
-    xbmcplugin.addSortMethods(HANDLE, xbmcplugin.SORT_METHOD_LABEL)
+def list_sources(media_type):
+    sources = get_sources(media_type)
+    for s in sources:
+        li = xbmcgui.ListItem(s["title"])
+        li.setInfo("video", {"title": s["title"], "plot": s.get("description", "")})
+        li.setArt({"thumb": s.get("thumbnail", "")})
+        li.setProperty("IsPlayable", "true")
+        params = urllib.parse.urlencode({"action": "play", "url": s["url"]})
+        xbmcplugin.addDirectoryItem(HANDLE, f"{sys.argv[0]}?{params}", li, isFolder=False)
     xbmcplugin.endOfDirectory(HANDLE)
 
+def play(url):
+    xbmcplugin.setResolvedUrl(HANDLE, True, xbmcgui.ListItem(path=url))
 
-def search():
-    """Open keyboard dialog, query API, and list results."""
-    kb = xbmc.Keyboard('', 'Search The Basement MediaHub')
-    kb.doModal()
-    if not kb.isConfirmed():
-        xbmcplugin.endOfDirectory(HANDLE)
-        return
-    query = kb.getText().strip()
-    if not query:
-        xbmcplugin.endOfDirectory(HANDLE)
-        return
+params = dict(urllib.parse.parse_qsl(sys.argv[2].lstrip("?")))
+action = params.get("action")
 
-    try:
-        response = requests.get(f"{API_BASE}/media/search", params={'q': query}, timeout=10)
-        response.raise_for_status()
-        media_items = response.json()
-    except Exception as e:
-        xbmc.log(f"[BasementMediaHub] Search error: {e}", xbmc.LOGERROR)
-        xbmcgui.Dialog().notification(ADDON_NAME, 'Search failed. Check API.', xbmcgui.NOTIFICATION_ERROR)
-        xbmcplugin.endOfDirectory(HANDLE)
-        return
-
-    for item in media_items:
-        title = item.get('title', 'Unknown')
-        item_id = item.get('id', '')
-        thumb = item.get('thumbnail', '')
-        stream_url = f"{API_BASE}/media/stream/{item_id}"
-
-        li = xbmcgui.ListItem(label=title)
-        li.setArt({'thumb': thumb})
-        li.setInfo('video', {'title': title, 'mediatype': 'video'})
-        li.setProperty('IsPlayable', 'true')
-        li.setPath(stream_url)
-        xbmcplugin.addDirectoryItem(handle=HANDLE, url=stream_url, listitem=li, isFolder=False)
-
-    xbmcplugin.endOfDirectory(HANDLE)
-
-
-# --- Router ---
-if __name__ == '__main__':
-    category = ARGS.get('category', [None])[0]
-
-    if category is None:
-        main_menu()
-    elif category == 'search':
-        search()
-    else:
-        list_media(category)
+if not action:
+    list_menu()
+elif action == "list":
+    list_sources(params.get("type"))
+elif action == "play":
+    play(params.get("url"))
