@@ -1,0 +1,12 @@
+body { font-family: sans-serif; background: #111; color: #eee; padding: 1rem; }
+header h1 { color: #e50914; }
+#filters button { margin: 0.3rem; padding: 0.5rem 1rem; background: #222; color: #fff; border: 1px solid #555; cursor: pointer; border-radius: 4px; }
+#grid { display: flex; flex-wrap: wrap; gap: 1rem; margin: 1rem 0; }
+.card { background: #1e1e1e; border: 1px solid #333; border-radius: 8px; padding: 1rem; width: 250px; }
+.card img { width: 100%; border-radius: 4px; }
+.card h3 { margin: 0.5rem 0; }
+.badge { background: #e50914; border-radius: 4px; padding: 2px 6px; font-size: 0.75rem; }
+.card a { display: block; margin-top: 0.5rem; color: #1db954; }
+#add-source { margin-top: 2rem; padding: 1rem; background: #1e1e1e; border-radius: 8px; }
+#add-source input, #add-source select { display: block; margin: 0.4rem 0; padding: 0.5rem; width: 100%; background: #333; color: #fff; border: 1px solid #555; border-radius: 4px; }
+#add-source button { margin-top: 0.5rem; padding: 0.6rem 1.5rem; background: #e50914; color: #fff; border: none; cursor: pointer; border-radius: 4px; }
